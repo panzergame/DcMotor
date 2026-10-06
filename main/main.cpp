@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <cstdio>
 #include <sys/unistd.h>
 #include "driver/gpio.h"
@@ -50,10 +51,29 @@ extern "C" void app_main(void)
 
     bdc_motor_enable(motor);
     bdc_motor_forward(motor);
-    bdc_motor_set_speed(motor, 400);
     // xTaskCreate(&blink_task, "blink-task", 2048, nullptr, 0, nullptr);
 
+    int32_t inc = 100;
+    uint32_t current_speed = 500;
+    bool dir = true;
+    bdc_motor_set_speed(motor, current_speed);
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(100));
+        current_speed += inc;
+        if (current_speed == 1000) {
+            inc = -inc;
+        }
+        
+        if (current_speed == 500) {
+            inc = -inc;
+            dir = !dir;
+            if (dir) {
+                bdc_motor_forward(motor);
+            } else {
+                bdc_motor_reverse(motor);
+            }
+        }
+        ESP_LOGI(TAG, "%i", current_speed);
+        bdc_motor_set_speed(motor, current_speed);
     }
 }
